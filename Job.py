@@ -23,7 +23,7 @@ class PrintQueueManager:
         self.rear = 0   # Points to next insertion position
         self.size = 0   # Current number of jobs
         self.lock = threading.RLock()  # Thread safety
-    
+        self.interval = 5
     def enqueue_job(self, user_id: str, job_id: str, priority: int = 1) -> bool:
         """Add a new job to the queue"""
         with self.lock:
@@ -80,3 +80,33 @@ class PrintQueueManager:
     
     def is_full(self) -> bool:
         return self.size >= self.capacity
+    
+    def apply_priority_aging(self):
+        """Module 2: Increase job priority over time and reorder"""
+        with self.lock:
+            now = time.time()
+            jobs = self.get_all_jobs()
+
+            for job in jobs:
+                job.waiting_time = int(now - job.submit_time)
+                if job.waiting_time >= self.interval and job.priority < 10:
+                    job.priority += 1
+                    job.submit_time = now  # reset 
+                    print(f"[AGING] Job {job.job_id} aged to priority {job.priority}")
+
+            self._reorder_jobs(jobs)
+
+    def _reorder_jobs(self, jobs):
+        jobs.sort(key=lambda j: (-j.priority, -j.waiting_time))
+
+        for i in range(self.capacity):
+            self.queue[i] = None
+
+        self.front = 0
+        self.rear = 0
+        self.size = 0
+
+        for job in jobs:
+            self.queue[self.rear] = job
+            self.rear = (self.rear + 1) % self.capacity
+            self.size += 1

@@ -1,34 +1,38 @@
 import time
 from Job import PrintQueueManager
-from PriorityAging import PriorityAndAgingSystem
-
 
 def main():
-    queue = PrintQueueManager(capacity=5)
-    aging_module = PriorityAndAgingSystem(queue, aging_interval=5)  # 5 seconds aging interval
+    pq = PrintQueueManager(capacity=5)
 
-    print("\n[Event] Submitting job1 (P=1)")
-    queue.enqueue_job("user1", "job1", priority=1)
-    time.sleep(3)
+    print("\n[EVENT] Submitting Job A (priority 1)")
+    pq.enqueue_job("user1", "A", priority=1)
+    time.sleep(2)
 
-    print("[Event] Submitting job2 (P=2)")
-    queue.enqueue_job("user2", "job2", priority=2)
-    time.sleep(4)
+    print("[EVENT] Submitting Job B (priority 2)")
+    pq.enqueue_job("user2", "B", priority=2)
+    time.sleep(2)
 
-    print("[Event] Submitting job3 (P=1)")
-    queue.enqueue_job("user3", "job3", priority=1)
+    print("[EVENT] Submitting Job C (priority 1)")
+    pq.enqueue_job("user3", "C", priority=1)
 
-    queue.show_status()
 
-    print("\n[Tick] Applying priority aging...")
-    aging_module.apply_priority_aging()
+    print("\n[STATUS BEFORE AGING]")
+    pq.show_status()
 
-    queue.show_status()
+    print("\n[WAIT] Sleeping to allow jobs to age...")
+    time.sleep(6)  
 
-    time.sleep(6)
-    print("\n[Tick] Second aging cycle...")
-    aging_module.apply_priority_aging()
-    queue.show_status()
+    print("\n[MODULE 2] Applying priority aging...")
+    pq.apply_priority_aging()
+
+    print("\n[STATUS AFTER AGING]")
+    pq.show_status()
+
+    print("\n[EVENT] Printing the next job...")
+    pq.dequeue_job()
+
+    print("\n[FINAL QUEUE STATUS]")
+    pq.show_status()
 
 if __name__ == "__main__":
     main()
