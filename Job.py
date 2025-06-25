@@ -1,6 +1,6 @@
 import threading
 import time
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 
 class Job:
     """Represents a print job with metadata"""
@@ -15,7 +15,7 @@ class Job:
         return f"Job({self.user_id}-{self.job_id}, P:{self.priority}, W:{self.waiting_time}s)"
 
 class PrintQueueManager:
-    """Core Queue Management Module - Circular Queue Implementation"""
+    """Core Queue Management Module + Module 2: Priority Aging"""
     
     def __init__(self, capacity: int = 10):
         self.capacity = capacity
@@ -24,7 +24,10 @@ class PrintQueueManager:
         self.rear = 0   # Points to next insertion position
         self.size = 0   # Current number of jobs
         self.lock = threading.RLock()  # Thread safety
-    
+
+        # Module 2: Priority Aging
+        self.interval = 5  # Time in seconds after which a job should be aged
+
     def enqueue_job(self, user_id: str, job_id: str, priority: int = 1) -> bool:
         """Add a new job to the queue"""
         with self.lock:
@@ -65,7 +68,6 @@ class PrintQueueManager:
                 current = (current + 1) % self.capacity
             print()
     
-    # Helper methods for other modules
     def get_all_jobs(self) -> List[Job]:
         """Get all jobs for other modules to access"""
         with self.lock:
@@ -81,3 +83,37 @@ class PrintQueueManager:
     
     def is_full(self) -> bool:
         return self.size >= self.capacity
+
+    # =======================
+    # MODULE 2: Priority Aging
+    # =======================
+    def apply_priority_aging(self):
+        """Increase job priority over time and reorder"""
+        with self.lock:
+            now = time.time()
+            jobs = self.get_all_jobs()
+
+            for job in jobs:
+                job.waiting_time = int(now - job.submit_time)
+                if job.waiting_time >= self.interval and job.priority < 10:
+                    job.priority += 1
+                    job.submit_time = now  # reset for next interval
+                    print(f"[AGING] Job {job.job_id} aged to priority {job.priority}")
+
+            self._reorder_jobs(jobs)
+
+    def _reorder_jobs(self, jobs: List[Job]):
+        """Sort jobs by priority and waiting time (descending)"""
+        jobs.sort(key=lambda j: (-j.priority, -j.waiting_time))
+
+        for i in range(self.capacity):
+            self.queue[i] = None
+
+        self.front = 0
+        self.rear = 0
+        self.size = 0
+
+        for job in jobs:
+            self.queue[self.rear] = job
+            self.rear = (self.rear + 1) % self.capacity
+            self.size += 1
