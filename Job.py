@@ -26,7 +26,9 @@ class PrintQueueManager:
         self.lock = threading.RLock()  # Thread safety
 
         # Module 2: Priority Aging
-        self.interval = 5  # Time in seconds after which a job should be aged
+        self.interval = 5  
+        # Module 3: Job Expiry
+        self.expiry_threshold = 10
 
     def enqueue_job(self, user_id: str, job_id: str, priority: int = 1) -> bool:
         """Add a new job to the queue"""
@@ -84,9 +86,9 @@ class PrintQueueManager:
     def is_full(self) -> bool:
         return self.size >= self.capacity
 
-    # =======================
+  
     # MODULE 2: Priority Aging
-    # =======================
+ 
     def apply_priority_aging(self):
         """Increase job priority over time and reorder"""
         with self.lock:
@@ -117,3 +119,27 @@ class PrintQueueManager:
             self.queue[self.rear] = job
             self.rear = (self.rear + 1) % self.capacity
             self.size += 1
+
+
+    # MODULE 3: Job Expiry
+
+    def remove_expired_jobs(self):
+        """Remove jobs that have exceeded expiry time"""
+        with self.lock:
+            now = time.time()
+            jobs = self.get_all_jobs()
+
+            valid_jobs = []
+            expired_jobs = []
+
+            for job in jobs:
+                job.waiting_time = int(now - job.submit_time)
+                if job.waiting_time >= self.expiry_threshold:
+                    expired_jobs.append(job)
+                else:
+                    valid_jobs.append(job)
+
+            for job in expired_jobs:
+                print(f"[EXPIRED] Job {job.job_id} removed (waited {job.waiting_time}s)")
+
+            self._reorder_jobs(valid_jobs)
