@@ -23,7 +23,7 @@ class PrintQueueManager:
         self.front = 0  # Points to front of queue
         self.rear = 0   # Points to next insertion position
         self.size = 0   # Current number of jobs
-        self.lock = threading.Lock()  # Thread safety
+        self.lock = threading.RLock()  # Thread safety
     
     def enqueue_job(self, user_id: str, job_id: str, priority: int = 1) -> bool:
         """Add a new job to the queue"""
