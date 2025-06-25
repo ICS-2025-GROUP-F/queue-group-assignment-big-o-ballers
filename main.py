@@ -3,6 +3,7 @@ from Job import PrintQueueManager
 
 def main():
     pq = PrintQueueManager(capacity=5)
+    print("[MODULE 2] Aging and Priority...")
 
     print("\n[EVENT] Submitting Job A (priority 1)")
     pq.enqueue_job("user1", "A", priority=1)
@@ -34,5 +35,8 @@ def main():
     print("\n[FINAL QUEUE STATUS]")
     pq.show_status()
 
+    print("[MODULE 3] Removing expired jobs...")
+    pq.remove_expired_jobs()
+    pq.show_status()
 if __name__ == "__main__":
     main()
