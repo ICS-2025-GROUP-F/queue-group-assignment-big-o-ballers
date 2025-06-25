@@ -136,31 +136,33 @@ class PrintQueueManager:
     def show_gui(self):
         Window = tk.Tk()
         Window.title("Print Queue Visualization.")
-       
-        columns = ("Position","User ID", "Job ID", "Priority", "Wait Time")
-        tree = ttk.Treeview(Window,columns=columns,show="headings")
+    
+        columns = ("Position", "User ID", "Job ID", "Priority", "Wait Time")
+        tree = ttk.Treeview(Window, columns=columns, show="headings")
         for col in columns:
-           tree.heading(col, text = col)
-           tree.column(col,width=100)
-           
-        #Add job data to the table
-        for i, job in enumerate(self.queue,start=1):
-            tree.insert("","end",values=(i,job["user_id"], job["job_id"], job["priority"], job["wait_time"]))
-        tree.pack(padx=10,pady=10)
+            tree.heading(col, text=col)
+            tree.column(col, width=100)
+    
+        for i, job in enumerate(self.get_all_jobs(), start=1):  # safer than using self.queue directly
+            tree.insert("", "end", values=(i, job.user_id, job.job_id, job.priority, job.waiting_time))
+
+        tree.pack(padx=10, pady=10)
         Window.mainloop()
 
+
     def show_status(self):
-        # We'll implement this part next
-        if not self.queue:
+        jobs = self.get_all_jobs()
+        if not jobs:
             print(Fore.RED + "\n--- Print Queue is currently empty ---\n")
             return
 
-        print(Fore.CYAN+"\n--- Current Print Queue Status ---")
-        print(Fore.YELLOW+f"{'Position':<10} {'User':<10} {'Job ID':<10} {'Priority':<10} {'Wait Time':<10}")
-        print(Fore.YELLOW+"-" * 55)
+        print(Fore.CYAN + "\n--- Current Print Queue Status ---")
+        print(Fore.YELLOW + f"{'Position':<10} {'User':<10} {'Job ID':<10} {'Priority':<10} {'Wait Time':<10}")
+        print(Fore.YELLOW + "-" * 55)
 
-        for index, job in enumerate(self.queue, start=1):
-            print(Fore.GREEN+f"{index:<10} {job['user_id']:<10} {job['job_id']:<10} {job['priority']:<10} {job['wait_time']:<10}")
+        for index, job in enumerate(jobs, start=1):
+            print(Fore.GREEN + f"{index:<10} {job.user_id:<10} {job.job_id:<10} {job.priority:<10} {job.waiting_time:<10}")
     
-        print(Fore.YELLOW+"-" * 55 + "\n")
+        print(Fore.YELLOW + "-" * 55 + "\n")
+
         
