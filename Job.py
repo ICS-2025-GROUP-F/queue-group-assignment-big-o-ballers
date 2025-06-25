@@ -1,6 +1,10 @@
 import threading
 import time
 from typing import Optional, List
+import tkinter as tk
+from tkinter import ttk
+from colorama import Fore, Style , init
+init(autoreset=True)  # Automatically reset color after each print
 
 class Job:
     """Represents a print job with metadata"""
@@ -54,21 +58,7 @@ class PrintQueueManager:
             self.size -= 1
             return job
     
-    def show_status(self) -> None:
-        """Display current queue status"""
-        with self.lock:
-            print(f"\nQueue Status: {self.size}/{self.capacity} jobs")
-            if self.size == 0:
-                print("Queue is empty")
-                return
-            
-            print("Jobs in queue:")
-            current = self.front
-            for i in range(self.size):
-                job = self.queue[current]
-                print(f"{i+1}. {job}")
-                current = (current + 1) % self.capacity
-            print()
+
     
     def get_all_jobs(self) -> List[Job]:
         """Get all jobs for other modules to access"""
@@ -143,3 +133,34 @@ class PrintQueueManager:
                 print(f"[EXPIRED] Job {job.job_id} removed (waited {job.waiting_time}s)")
 
             self._reorder_jobs(valid_jobs)
+    def show_gui(self):
+        Window = tk.Tk()
+        Window.title("Print Queue Visualization.")
+       
+        columns = ("Position","User ID", "Job ID", "Priority", "Wait Time")
+        tree = ttk.Treeview(Window,columns=columns,show="headings")
+        for col in columns:
+           tree.heading(col, text = col)
+           tree.column(col,width=100)
+           
+        #Add job data to the table
+        for i, job in enumerate(self.queue,start=1):
+            tree.insert("","end",values=(i,job["user_id"], job["job_id"], job["priority"], job["wait_time"]))
+        tree.pack(padx=10,pady=10)
+        Window.mainloop()
+
+    def show_status(self):
+        # We'll implement this part next
+        if not self.queue:
+            print(Fore.RED + "\n--- Print Queue is currently empty ---\n")
+            return
+
+        print(Fore.CYAN+"\n--- Current Print Queue Status ---")
+        print(Fore.YELLOW+f"{'Position':<10} {'User':<10} {'Job ID':<10} {'Priority':<10} {'Wait Time':<10}")
+        print(Fore.YELLOW+"-" * 55)
+
+        for index, job in enumerate(self.queue, start=1):
+            print(Fore.GREEN+f"{index:<10} {job['user_id']:<10} {job['job_id']:<10} {job['priority']:<10} {job['wait_time']:<10}")
+    
+        print(Fore.YELLOW+"-" * 55 + "\n")
+        
